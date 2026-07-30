@@ -1,0 +1,14 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# Python venv used for plotting
+plot_env/
+__pycache__/
+*.pyc
+
+# Editor cruft
+.vscode/
+*.swp
+.DS_Store

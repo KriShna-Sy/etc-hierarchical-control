@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, ExecuteProcess
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+
+
+def generate_launch_description():
+    sigma_arg = DeclareLaunchArgument(
+        'sigma', default_value='0.1',
+        description='Event-triggering threshold sigma'
+    )
+    c_arg = DeclareLaunchArgument(
+        'c', default_value='0.0',
+        description='Event-triggering constant c (use 0.0 for continuous baseline with sigma=0.0)'
+    )
+    bag_name_arg = DeclareLaunchArgument(
+        'bag_name', default_value='experiment_run',
+        description='Output folder name for the rosbag'
+    )
+    settle_time_arg = DeclareLaunchArgument(
+        'settle_time', default_value='5.0',
+        description='Seconds to wait after spawn before starting control nodes (lets pose settle)'
+    )
+
+    sigma = LaunchConfiguration('sigma')
+    c = LaunchConfiguration('c')
+    bag_name = LaunchConfiguration('bag_name')
+    settle_time = LaunchConfiguration('settle_time')
+
+    # 1. Gazebo world
+    gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('swarm_description'), 'launch', 'gazebo.launch.py'
+            ])
+        )
+    )
+
+    # 2. Spawn robot (started immediately; Gazebo needs a moment to be ready,
+    #    so this is layered with a short built-in delay too)
+    spawn_launch = TimerAction(
+        period=3.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    PathJoinSubstitution([
+                        FindPackageShare('swarm_description'), 'launch', 'spawn.launch.py'
+                    ])
+                )
+            )
+        ]
+    )
+
+    # 3. Control nodes — delayed until `settle_time` after spawn to guarantee
+    #    the robot is at rest at its spawn pose before trajectory/trigger start.
+    #    (3.0s spawn delay + settle_time from launch start)
+    trajectory_generator_node = Node(
+        package='etc_control',
+        executable='trajectory_generator',
+        name='trajectory_generator',
+        output='screen'
+    )
+
+    event_trigger_node = Node(
+        package='etc_control',
+        executable='event_trigger_node',
+        name='event_trigger_node',
+        output='screen',
+        parameters=[{'sigma': sigma, 'c': c}]
+    )
+
+    esp32_emulator_node = Node(
+        package='etc_control',
+        executable='esp32_emulator_node',
+        name='esp32_emulator_node',
+        output='screen'
+    )
+
+    control_nodes = TimerAction(
+        period=3.0,  # matches spawn delay
+        actions=[
+            TimerAction(
+                period=settle_time,
+                actions=[trajectory_generator_node, event_trigger_node, esp32_emulator_node]
+            )
+        ]
+    )
+
+    # 4. Bag recording — starts a couple seconds after control nodes,
+    #    once the robot is confirmed moving under control.
+    bag_record = TimerAction(
+        period=3.0,
+        actions=[
+            TimerAction(
+                period=settle_time,
+                actions=[
+                    TimerAction(
+                        period=2.0,
+                        actions=[
+                            ExecuteProcess(
+                                cmd=[
+                                    'ros2', 'bag', 'record',
+                                    '/diff_drive_controller/odom',
+                                    '-o', bag_name
+                                ],
+                                output='screen'
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
+
+    return LaunchDescription([
+        sigma_arg,
+        c_arg,
+        bag_name_arg,
+        settle_time_arg,
+        gazebo_launch,
+        spawn_launch,
+        control_nodes,
+        bag_record,
+    ])
