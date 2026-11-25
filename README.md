@@ -1,5 +1,9 @@
 # Event-Triggered Trajectory Tracking for a Differential-Drive Robot
 
+[![ROS 2 Jazzy](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros)](https://docs.ros.org/en/jazzy/)
+[![Gazebo Harmonic](https://img.shields.io/badge/Gazebo-Harmonic-orange)](https://gazebosim.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Simulation study of event-triggered control (ETC) for a differential-drive
 robot in Gazebo/ROS 2: a threshold-based trigger, a "smart hold" actuation
 strategy that tracks a live feedforward reference between events instead of
@@ -26,6 +30,16 @@ reference trajectories.
 - The curvature-adaptive threshold helps at some square-path operating
   points but hit a startup-timing race condition on the circle path,
   reported as an open limitation rather than a quantified result.
+
+## Results at a glance
+
+| Square path: ZOH vs. smart hold | Circle path: ZOH vs. smart hold |
+| :---: | :---: |
+| ![square](results/figures/fig_zoh_vs_smart_hold_errorbars.png) | ![circle](results/figures/fig_circle_zoh_vs_smart_errorbars.png) |
+
+| Bandwidth vs. accuracy trade-off | Trajectory comparison |
+| :---: | :---: |
+| ![tradeoff](results/figures/fig_bandwidth_accuracy_tradeoff.png) | ![traj](results/figures/fig_trajectory_comparison.png) |
 
 ## Layers
 
@@ -114,3 +128,7 @@ port (RPi5 + ESP32 over serial) and L4 dropout testing are next (see
 If you use this code, a paper describing this work is under submission
 to ICRM (S. C. Yadav, R. P. Kumar); citation details to follow once
 accepted.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

@@ -19,8 +19,8 @@ setup(
     zip_safe=True,
     maintainer='krishna',
     maintainer_email='siddapuchinnikrishna@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Event-triggered trajectory tracking (ZOH vs. smart hold, curvature-adaptive threshold) for a differential-drive robot in Gazebo',
+    license='MIT',
     extras_require={
         'test': [
             'pytest',
