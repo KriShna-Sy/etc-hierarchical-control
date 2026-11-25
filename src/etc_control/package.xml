@@ -3,9 +3,9 @@
 <package format="3">
   <name>etc_control</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Event-triggered trajectory tracking (ZOH vs. smart hold, curvature-adaptive threshold) for a differential-drive robot in Gazebo</description>
   <maintainer email="siddapuchinnikrishna@gmail.com">krishna</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
